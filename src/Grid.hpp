@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 
+#include <optional>
+
 struct Direction{
     Direction() = default;
     Direction(int dx, int dy) : dx{dx}, dy{dy} {}
@@ -104,6 +106,18 @@ struct Grid{
     }
     bool contains(const Point &p) const{
         return p.x >= 0 && p.x < xMax && p.y >= 0 && p.y < yMax;
+    }
+
+    std::optional<Point> findFirst(const T &val) const {
+        for(int y = 0; y < yMax; y++){
+            for(int x = 0; x < xMax; x++){
+                if(mat[y][x] == val){
+                    return Point(x, y);
+                }
+            }
+        }
+
+        return std::nullopt;
     }
 
     std::vector<std::vector<T>> mat{};
