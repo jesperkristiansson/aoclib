@@ -5,48 +5,6 @@
 #include <array>
 #include <iostream>
 
-// This should be replaced with Point2D, but that requires refactoring e.g. p.x to p.x()
-struct Point{
-    Point() = default;
-    Point(int x, int y) : x{x}, y{y} {}
-
-    auto operator<=>(const Point &other) const = default;
-
-    Point operator+(const Direction &d) const{
-        return Point(x + d.dx, y + d.dy);
-    }
-    Point &operator+=(const Direction &d){
-        x += d.dx;
-        y += d.dy;
-        return *this;
-    }
-    Point operator-(const Direction &d) const{
-        return Point(x - d.dx, y - d.dy);
-    }
-    Point &operator-=(const Direction &d){
-        x -= d.dx;
-        y -= d.dy;
-        return *this;
-    }
-    Direction operator-(const Point &other){
-        return Direction(this->x - other.x, this->y - other.y);
-    }
-
-    int x{0}, y{0};
-};
-
-std::ostream &operator<<(std::ostream &os, const Point &p){
-    return os << p.x << ',' << p.y;
-}
-std::istream &operator>>(std::istream &is, Point &p){
-    is >> p.x;
-    if(is.peek()){
-        is.ignore();
-    }
-    is >> p.y;
-    return is;
-}
-
 template <unsigned N>
 struct PointND{
     PointND() = default;
@@ -114,10 +72,14 @@ std::istream &operator>>(std::istream &is, PointND<N> &p){
     return is;
 }
 
+// Forward declaration to avoid circular dependency between Point and Point2D due to both having implicit conversion from the other
+struct Point;
 
 struct Point2D : private PointND<2>{
     using PointND<2>::PointND;
     Point2D(int x, int y) : PointND<2>({x, y}) {}
+    // Allow implicit conversion both ways for backwards compatability
+    Point2D(Point);
 
     int x() const{
         return values[0];
@@ -156,3 +118,50 @@ struct Point3D : private PointND<3>{
         return values[2];
     }
 };
+
+// This should be replaced with Point2D, but that requires refactoring e.g. p.x to p.x()
+struct Point{
+    Point() = default;
+    Point(int x, int y) : x{x}, y{y} {}
+    // Allow implicit conversion both ways for backwards compatability
+    Point(Point2D);
+
+    auto operator<=>(const Point &other) const = default;
+
+    Point operator+(const Direction &d) const{
+        return Point(x + d.dx, y + d.dy);
+    }
+    Point &operator+=(const Direction &d){
+        x += d.dx;
+        y += d.dy;
+        return *this;
+    }
+    Point operator-(const Direction &d) const{
+        return Point(x - d.dx, y - d.dy);
+    }
+    Point &operator-=(const Direction &d){
+        x -= d.dx;
+        y -= d.dy;
+        return *this;
+    }
+    Direction operator-(const Point &other){
+        return Direction(this->x - other.x, this->y - other.y);
+    }
+
+    int x{0}, y{0};
+};
+
+std::ostream &operator<<(std::ostream &os, const Point &p){
+    return os << p.x << ',' << p.y;
+}
+std::istream &operator>>(std::istream &is, Point &p){
+    is >> p.x;
+    if(is.peek()){
+        is.ignore();
+    }
+    is >> p.y;
+    return is;
+}
+
+Point2D::Point2D(Point p) : Point2D(p.x, p.y) {}
+Point::Point(Point2D p) : x{p.x()}, y{p.y()} {}

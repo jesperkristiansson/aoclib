@@ -3,39 +3,6 @@
 #include <iostream>
 #include <array>
 
-// This should be replaced with Direction2D, but that requires refactoring e.g. dir.dx to dir.dx()
-struct Direction{
-    Direction() = default;
-    Direction(int dx, int dy) : dx{dx}, dy{dy} {}
-
-    auto operator<=>(const Direction &other) const = default;
-
-    Direction operator*(int mult) const{
-        return Direction(dx*mult, dy*mult);
-    }
-    Direction operator+(Direction other) const{
-        return Direction(dx+other.dx, dy+other.dy);
-    }
-
-    Direction rotateRight() const{
-        return Direction(-dy, dx);
-    }
-    Direction rotateLeft() const{
-        return Direction(dy, -dx);
-    }
-
-    int dx{0}, dy{0};
-};
-
-std::ostream &operator<<(std::ostream &os, const Direction &d){
-    return os << d.dx << ',' << d.dy;
-}
-
-const inline Direction NORTH(0, -1);
-const inline Direction SOUTH(0, 1);
-const inline Direction EAST(1, 0);
-const inline Direction WEST(-1, 0);
-
 template<unsigned N>
 struct DirectionND{
     DirectionND() = default;
@@ -77,9 +44,14 @@ std::ostream &operator<<(std::ostream &os, const DirectionND<N> &d){
     return os;
 }
 
+// Forward declaration to avoid circular dependency between Direction and Direction2D due to both having implicit conversion from the other
+struct Direction;
+
 struct Direction2D : private DirectionND<2>{
     using DirectionND<2>::DirectionND;
     Direction2D(int dx, int dy) : DirectionND<2>({dx, dy}) {}
+    // Allow implicit conversion both ways for backwards compatability
+    Direction2D(Direction);
 
     int dx() const{
         return values[0];
@@ -126,3 +98,41 @@ struct Direction3D : private DirectionND<3>{
         return values[2];
     }
 };
+
+// This should be replaced with Direction2D, but that requires refactoring e.g. dir.dx to dir.dx()
+struct Direction{
+    Direction() = default;
+    Direction(int dx, int dy) : dx{dx}, dy{dy} {}
+    // Allow implicit conversion both ways for backwards compatability
+    Direction(Direction2D);
+
+    auto operator<=>(const Direction &other) const = default;
+
+    Direction operator*(int mult) const{
+        return Direction(dx*mult, dy*mult);
+    }
+    Direction operator+(Direction other) const{
+        return Direction(dx+other.dx, dy+other.dy);
+    }
+
+    Direction rotateRight() const{
+        return Direction(-dy, dx);
+    }
+    Direction rotateLeft() const{
+        return Direction(dy, -dx);
+    }
+
+    int dx{0}, dy{0};
+};
+
+std::ostream &operator<<(std::ostream &os, const Direction &d){
+    return os << d.dx << ',' << d.dy;
+}
+
+const inline Direction NORTH(0, -1);
+const inline Direction SOUTH(0, 1);
+const inline Direction EAST(1, 0);
+const inline Direction WEST(-1, 0);
+
+Direction2D::Direction2D(Direction d) : Direction2D(d.dx, d.dy) {}
+Direction::Direction(Direction2D d) : dx{d.dx()}, dy{d.dy()} {}
