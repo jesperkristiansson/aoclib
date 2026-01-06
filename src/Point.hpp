@@ -12,6 +12,10 @@ struct PointND{
 
     auto operator<=>(const PointND<N> &other) const = default;
 
+    static unsigned dimensions(){
+        return N;
+    }
+
     int operator[](size_t i) const{
         return values[i];
     }

@@ -10,6 +10,10 @@ struct DirectionND{
 
     auto operator<=>(const DirectionND<N> &other) const = default;
 
+    static unsigned dimensions(){
+        return N;
+    }
+
     int operator[](size_t i) const{
         return values[i];
     }
