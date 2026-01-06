@@ -75,7 +75,7 @@ std::istream &operator>>(std::istream &is, PointND<N> &p){
 // Forward declaration to avoid circular dependency between Point and Point2D due to both having implicit conversion from the other
 struct Point;
 
-struct Point2D : private PointND<2>{
+struct Point2D : PointND<2>{
     using PointND<2>::PointND;
     Point2D(int x, int y) : PointND<2>({x, y}) {}
     // Allow implicit conversion both ways for backwards compatability
@@ -95,7 +95,7 @@ struct Point2D : private PointND<2>{
     }
 };
 
-struct Point3D : private PointND<3>{
+struct Point3D : PointND<3>{
     using PointND<3>::PointND;
     Point3D(int x, int y, int z) : PointND<3>({x, y, z}) {}
 
